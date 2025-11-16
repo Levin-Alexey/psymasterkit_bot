@@ -84,3 +84,22 @@ async def handle_get_video(callback: CallbackQuery):
 
     await callback.message.answer(text, parse_mode="HTML", reply_markup=keyboard)
     await callback.answer()
+
+
+@common_cta_router.callback_query(F.data == "learn_how_to_change")
+async def handle_learn_how_to_change(callback: CallbackQuery):
+    text = (
+        "Вот видео с разбором, как изменить сценарий."
+    )
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Смотреть видео",
+                    url="https://ya.ru"
+                )
+            ]
+        ]
+    )
+    await callback.message.answer(text, parse_mode="HTML", reply_markup=keyboard)
+    await callback.answer()

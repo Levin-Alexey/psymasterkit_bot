@@ -49,3 +49,38 @@ async def handle_no_more_scenario(callback: CallbackQuery):
 
     await callback.message.answer(text, parse_mode="HTML", reply_markup=keyboard)
     await callback.answer()
+
+
+@common_cta_router.callback_query(F.data == "get_video")
+async def handle_get_video(callback: CallbackQuery):
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(
+            select(User).where(User.telegram_id == callback.from_user.id)
+        )
+        user = result.scalar_one_or_none()
+
+    user_name = None
+    if user:
+        user_name = user.user_name
+
+    display_name = user_name or "Коллега"
+
+    text = (
+        f"<b>{display_name}, вы прошли два ключевых шага:</b>\n\n"
+        "✓ Узнали свой блокирующий сценарий\n"
+        "✓ Посчитали, во сколько он вам обходится\n\n"
+        "Теперь у вас есть полная картина происходящего, вы видите проблему и понимаете её масштаб.\n\n"
+        "Пришло время для самого важного — показать вам выход из этой ловушки."
+    )
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(
+                text="Узнать, как изменить сценарий",
+                callback_data="learn_how_to_change"
+            )]
+        ]
+    )
+
+    await callback.message.answer(text, parse_mode="HTML", reply_markup=keyboard)
+    await callback.answer()

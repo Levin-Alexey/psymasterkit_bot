@@ -3,6 +3,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.filters import Command, CommandStart
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.client.session.aiohttp import AiohttpSession
 from dotenv import load_dotenv
 import os
 from loguru import logger
@@ -26,8 +27,18 @@ load_dotenv()
 # Для продакшена рекомендуется использовать более персистентное хранилище, например Redis
 storage = MemoryStorage()
 
-# Инициализация бота и диспетчера
-bot = Bot(token=os.getenv('BOT_TOKEN'))
+# Инициализация бота и диспетчера с поддержкой прокси
+proxy_url = os.getenv('PROXY_URL')
+if proxy_url:
+    from aiohttp_socks import ProxyConnector
+    connector = ProxyConnector.from_url(proxy_url)
+    session = AiohttpSession(connector=connector)
+    bot = Bot(token=os.getenv('BOT_TOKEN'), session=session)
+    logger.info(f"Бот инициализирован с прокси: {proxy_url}")
+else:
+    bot = Bot(token=os.getenv('BOT_TOKEN'))
+    logger.info("Бот инициализирован без прокси")
+
 dp = Dispatcher(storage=storage)
 
 # Включаем роутеры

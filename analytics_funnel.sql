@@ -1,0 +1,178 @@
+-- Per-user progress: stage reached, labels, timestamps, durations
+WITH flags AS (
+  SELECT
+    u.id AS user_id,
+    u.telegram_id,
+    u.user_name,
+    MIN(e.created_at) FILTER (WHERE e.event_code = 'bot_start') AS ts_01_bot_start,
+    MIN(e.created_at) FILTER (WHERE e.event_code = 'name_confirmed') AS ts_02_name_confirmed,
+    MIN(e.created_at) FILTER (WHERE e.event_code = 'phone_confirmed') AS ts_03_phone_confirmed,
+    MIN(e.created_at) FILTER (WHERE e.event_code = 'goal_selected') AS ts_04_goal_selected,
+    MIN(e.created_at) FILTER (WHERE e.event_code IN ('start_quiz','quiz_started','discover_scenario','start_quiz_clicked')) AS ts_05_quiz_started,
+    MIN(e.created_at) FILTER (WHERE e.event_code IN ('show_quiz_results','quiz_completed')) AS ts_06_quiz_completed,
+    MIN(e.created_at) FILTER (WHERE e.event_code IN ('scenario_cost_started','non_psych_quiz_started')) AS ts_07_cost_started,
+    MIN(e.created_at) FILTER (WHERE e.event_code IN ('scenario_cost_completed','non_psych_quiz_completed')) AS ts_08_cost_completed,
+    MIN(e.created_at) FILTER (WHERE e.event_code = 'book_consultation_clicked') AS ts_09_book_consultation,
+    MIN(e.created_at) FILTER (WHERE e.event_code = 'book_call_requested') AS ts_10_book_call,
+    MIN(e.created_at) FILTER (WHERE e.event_code IN ('go_to_channel_clicked','gift_sent_success')) AS ts_11_channel_or_gift
+  FROM users u
+  LEFT JOIN user_events e ON e.user_id = u.id
+  GROUP BY u.id, u.telegram_id, u.user_name
+),
+progress AS (
+  SELECT
+    user_id,
+    telegram_id,
+    user_name,
+    ts_01_bot_start,
+    ts_02_name_confirmed,
+    ts_03_phone_confirmed,
+    ts_04_goal_selected,
+    ts_05_quiz_started,
+    ts_06_quiz_completed,
+    ts_07_cost_started,
+    ts_08_cost_completed,
+    ts_09_book_consultation,
+    ts_10_book_call,
+    ts_11_channel_or_gift,
+    CASE
+      WHEN ts_11_channel_or_gift IS NOT NULL THEN 11
+      WHEN ts_10_book_call IS NOT NULL THEN 10
+      WHEN ts_09_book_consultation IS NOT NULL THEN 9
+      WHEN ts_08_cost_completed IS NOT NULL THEN 8
+      WHEN ts_07_cost_started IS NOT NULL THEN 7
+      WHEN ts_06_quiz_completed IS NOT NULL THEN 6
+      WHEN ts_05_quiz_started IS NOT NULL THEN 5
+      WHEN ts_04_goal_selected IS NOT NULL THEN 4
+      WHEN ts_03_phone_confirmed IS NOT NULL THEN 3
+      WHEN ts_02_name_confirmed IS NOT NULL THEN 2
+      WHEN ts_01_bot_start IS NOT NULL THEN 1
+      ELSE 0
+    END AS stage_reached,
+    CASE
+      WHEN ts_11_channel_or_gift IS NOT NULL THEN '11_channel_or_gift'
+      WHEN ts_10_book_call IS NOT NULL THEN '10_book_call_requested'
+      WHEN ts_09_book_consultation IS NOT NULL THEN '9_book_consultation_clicked'
+      WHEN ts_08_cost_completed IS NOT NULL THEN '8_cost_quiz_completed'
+      WHEN ts_07_cost_started IS NOT NULL THEN '7_cost_quiz_started'
+      WHEN ts_06_quiz_completed IS NOT NULL THEN '6_main_quiz_completed'
+      WHEN ts_05_quiz_started IS NOT NULL THEN '5_main_quiz_started'
+      WHEN ts_04_goal_selected IS NOT NULL THEN '4_goal_selected'
+      WHEN ts_03_phone_confirmed IS NOT NULL THEN '3_phone_confirmed'
+      WHEN ts_02_name_confirmed IS NOT NULL THEN '2_name_confirmed'
+      WHEN ts_01_bot_start IS NOT NULL THEN '1_bot_start'
+      ELSE '0_no_activity'
+    END AS stage_label
+  FROM flags
+),
+durations AS (
+  SELECT
+    p.*,
+    AGE(ts_02_name_confirmed, ts_01_bot_start)         AS dur_01_to_02,
+    AGE(ts_03_phone_confirmed, ts_02_name_confirmed)   AS dur_02_to_03,
+    AGE(ts_04_goal_selected, ts_03_phone_confirmed)    AS dur_03_to_04,
+    AGE(ts_05_quiz_started, ts_04_goal_selected)       AS dur_04_to_05,
+    AGE(ts_06_quiz_completed, ts_05_quiz_started)      AS dur_05_to_06,
+    AGE(ts_07_cost_started, ts_06_quiz_completed)      AS dur_06_to_07,
+    AGE(ts_08_cost_completed, ts_07_cost_started)      AS dur_07_to_08,
+    AGE(ts_09_book_consultation, ts_08_cost_completed) AS dur_08_to_09,
+    AGE(ts_10_book_call, ts_09_book_consultation)      AS dur_09_to_10,
+    AGE(ts_11_channel_or_gift, ts_10_book_call)        AS dur_10_to_11
+  FROM progress p
+)
+SELECT *
+FROM durations
+ORDER BY stage_reached DESC, ts_01_bot_start DESC;
+
+
+-- Funnel: counts and conversion by stage
+WITH flags AS (
+  SELECT
+    u.id AS user_id,
+    MIN(e.created_at) FILTER (WHERE e.event_code = 'bot_start') AS s1,
+    MIN(e.created_at) FILTER (WHERE e.event_code = 'name_confirmed') AS s2,
+    MIN(e.created_at) FILTER (WHERE e.event_code = 'phone_confirmed') AS s3,
+    MIN(e.created_at) FILTER (WHERE e.event_code = 'goal_selected') AS s4,
+    MIN(e.created_at) FILTER (WHERE e.event_code IN ('start_quiz','quiz_started','discover_scenario','start_quiz_clicked')) AS s5,
+    MIN(e.created_at) FILTER (WHERE e.event_code IN ('show_quiz_results','quiz_completed')) AS s6,
+    MIN(e.created_at) FILTER (WHERE e.event_code IN ('scenario_cost_started','non_psych_quiz_started')) AS s7,
+    MIN(e.created_at) FILTER (WHERE e.event_code IN ('scenario_cost_completed','non_psych_quiz_completed')) AS s8,
+    MIN(e.created_at) FILTER (WHERE e.event_code = 'book_consultation_clicked') AS s9,
+    MIN(e.created_at) FILTER (WHERE e.event_code = 'book_call_requested') AS s10,
+    MIN(e.created_at) FILTER (WHERE e.event_code IN ('go_to_channel_clicked','gift_sent_success')) AS s11
+  FROM users u
+  LEFT JOIN user_events e ON e.user_id = u.id
+  GROUP BY u.id
+)
+SELECT
+  COUNT(*)                                        AS users_total,
+  COUNT(*) FILTER (WHERE s1  IS NOT NULL)         AS stage_1_start,
+  COUNT(*) FILTER (WHERE s2  IS NOT NULL)         AS stage_2_name,
+  COUNT(*) FILTER (WHERE s3  IS NOT NULL)         AS stage_3_phone,
+  COUNT(*) FILTER (WHERE s4  IS NOT NULL)         AS stage_4_goal,
+  COUNT(*) FILTER (WHERE s5  IS NOT NULL)         AS stage_5_quiz_start,
+  COUNT(*) FILTER (WHERE s6  IS NOT NULL)         AS stage_6_quiz_done,
+  COUNT(*) FILTER (WHERE s7  IS NOT NULL)         AS stage_7_cost_start,
+  COUNT(*) FILTER (WHERE s8  IS NOT NULL)         AS stage_8_cost_done,
+  COUNT(*) FILTER (WHERE s9  IS NOT NULL)         AS stage_9_consult_click,
+  COUNT(*) FILTER (WHERE s10 IS NOT NULL)         AS stage_10_call_request,
+  COUNT(*) FILTER (WHERE s11 IS NOT NULL)         AS stage_11_channel_or_gift,
+  ROUND(100.0 * COUNT(*) FILTER (WHERE s6 IS NOT NULL) / NULLIF(COUNT(*),0), 1)  AS conv_quiz_done_pct,
+  ROUND(100.0 * COUNT(*) FILTER (WHERE s8 IS NOT NULL) / NULLIF(COUNT(*),0), 1)  AS conv_cost_done_pct,
+  ROUND(100.0 * COUNT(*) FILTER (WHERE s10 IS NOT NULL) / NULLIF(COUNT(*),0), 1) AS conv_call_request_pct,
+  ROUND(100.0 * COUNT(*) FILTER (WHERE s11 IS NOT NULL) / NULLIF(COUNT(*),0), 1) AS conv_channel_pct
+FROM flags;
+
+
+-- Durations percentiles (median/p90) in seconds between key steps
+WITH base AS (
+  WITH flags AS (
+    SELECT
+      u.id AS user_id,
+      MIN(e.created_at) FILTER (WHERE e.event_code = 'bot_start') AS ts1,
+      MIN(e.created_at) FILTER (WHERE e.event_code = 'name_confirmed') AS ts2,
+      MIN(e.created_at) FILTER (WHERE e.event_code = 'phone_confirmed') AS ts3,
+      MIN(e.created_at) FILTER (WHERE e.event_code = 'goal_selected') AS ts4,
+      MIN(e.created_at) FILTER (WHERE e.event_code IN ('start_quiz','quiz_started','discover_scenario','start_quiz_clicked')) AS ts5,
+      MIN(e.created_at) FILTER (WHERE e.event_code IN ('show_quiz_results','quiz_completed')) AS ts6,
+      MIN(e.created_at) FILTER (WHERE e.event_code IN ('scenario_cost_completed','non_psych_quiz_completed')) AS ts8,
+      MIN(e.created_at) FILTER (WHERE e.event_code = 'book_call_requested') AS ts10
+    FROM users u
+    LEFT JOIN user_events e ON e.user_id = u.id
+    GROUP BY u.id
+  )
+  SELECT
+    EXTRACT(EPOCH FROM (ts2 - ts1))  AS s01_to_02,
+    EXTRACT(EPOCH FROM (ts3 - ts2))  AS s02_to_03,
+    EXTRACT(EPOCH FROM (ts4 - ts3))  AS s03_to_04,
+    EXTRACT(EPOCH FROM (ts5 - ts4))  AS s04_to_05,
+    EXTRACT(EPOCH FROM (ts6 - ts5))  AS s05_to_06,
+    EXTRACT(EPOCH FROM (ts8 - ts6))  AS s06_to_08,
+    EXTRACT(EPOCH FROM (ts10 - ts8)) AS s08_to_10
+  FROM flags
+)
+SELECT '01->02' AS step, percentile_cont(0.5) WITHIN GROUP (ORDER BY s01_to_02) AS p50_sec, percentile_cont(0.9) WITHIN GROUP (ORDER BY s01_to_02) AS p90_sec FROM base
+UNION ALL
+SELECT '02->03', percentile_cont(0.5) WITHIN GROUP (ORDER BY s02_to_03), percentile_cont(0.9) WITHIN GROUP (ORDER BY s02_to_03) FROM base
+UNION ALL
+SELECT '03->04', percentile_cont(0.5) WITHIN GROUP (ORDER BY s03_to_04), percentile_cont(0.9) WITHIN GROUP (ORDER BY s03_to_04) FROM base
+UNION ALL
+SELECT '04->05', percentile_cont(0.5) WITHIN GROUP (ORDER BY s04_to_05), percentile_cont(0.9) WITHIN GROUP (ORDER BY s04_to_05) FROM base
+UNION ALL
+SELECT '05->06', percentile_cont(0.5) WITHIN GROUP (ORDER BY s05_to_06), percentile_cont(0.9) WITHIN GROUP (ORDER BY s05_to_06) FROM base
+UNION ALL
+SELECT '06->08', percentile_cont(0.5) WITHIN GROUP (ORDER BY s06_to_08), percentile_cont(0.9) WITHIN GROUP (ORDER BY s06_to_08) FROM base
+UNION ALL
+SELECT '08->10', percentile_cont(0.5) WITHIN GROUP (ORDER BY s08_to_10), percentile_cont(0.9) WITHIN GROUP (ORDER BY s08_to_10) FROM base;
+
+
+-- Optional: create a view to reuse progress elsewhere
+-- CREATE OR REPLACE VIEW user_progress AS
+-- <paste the SELECT from the `progress` CTE above>;
+
+
+-- Recommended indexes (run once):
+-- CREATE INDEX IF NOT EXISTS idx_user_events_user_code_time ON user_events(user_id, event_code, created_at);
+-- CREATE INDEX IF NOT EXISTS idx_user_events_code_time ON user_events(event_code, created_at);
+-- For payload filtering (if needed):
+-- CREATE INDEX IF NOT EXISTS idx_user_events_payload_gin ON user_events USING GIN (payload);

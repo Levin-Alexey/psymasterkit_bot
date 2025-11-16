@@ -98,6 +98,12 @@ async def handle_learn_how_to_change(callback: CallbackQuery):
                     text="Смотреть видео",
                     url="https://ya.ru"
                 )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="Готов(а) к следующему шагу",
+                    callback_data="ready_for_next_step"
+                )
             ]
         ]
     )

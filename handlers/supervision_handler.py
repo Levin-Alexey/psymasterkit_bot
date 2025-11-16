@@ -132,15 +132,23 @@ async def handle_go_to_channel(callback: CallbackQuery):
     # Путь к файлу относительно корня проекта
     file_path = Path(__file__).resolve().parent.parent / 'src' / 'test.txt'
     
+    # Логируем путь для диагностики
+    from loguru import logger
+    logger.info("Попытка отправить файл по пути: {}", file_path)
+    logger.info("Файл существует: {}", file_path.exists())
+    
     if file_path.exists():
         try:
             document = FSInputFile(str(file_path))
             await callback.message.answer_document(document)
+            logger.info("Файл успешно отправлен пользователю {}", callback.from_user.id)
         except Exception as e:
+            logger.error("Ошибка отправки файла: {}", e)
             await callback.message.answer(
                 f'Не удалось приложить файл подарка. Ошибка: {e}'
             )
     else:
+        logger.error("Файл не найден: {}", file_path)
         await callback.message.answer(
             f'Файл подарка не найден по пути: {file_path}'
         )

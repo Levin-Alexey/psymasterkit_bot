@@ -182,18 +182,7 @@ async def show_cost_results(callback: CallbackQuery, cost_result: ScenarioCostRe
         )
 
 
-@scenario_cost_router.callback_query(F.data == "no_more_scenario")
-async def no_more_scenario(callback: CallbackQuery):
-    """
-    Обработчик кнопки "Нет, не хочу" - финальное сообщение.
-    """
-    logger.info(f"Пользователь {callback.from_user.id} завершил расчет стоимости")
-    
-    await callback.message.answer(
-        "Отлично! Это первый шаг к изменениям. "
-        "Скоро мы свяжемся с вами для дальнейших действий."
-    )
-    await callback.answer()
+# Обработчик кнопки "Нет, не хочу" вынесен в общий модуль (common_cta_handler.py)
 
 @scenario_cost_router.callback_query(F.data == "learn_scenario_cost")
 async def learn_scenario_cost(callback: CallbackQuery):

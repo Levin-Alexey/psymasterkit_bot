@@ -12,6 +12,7 @@ from sqlalchemy import select
 from handlers import scenario_handler
 from handlers.quiz_handler import quiz_router
 from handlers.scenario_cost_handler import scenario_cost_router
+from handlers.common_cta_handler import common_cta_router
 
 # Загрузка переменных окружения
 load_dotenv()
@@ -28,6 +29,7 @@ dp = Dispatcher(storage=storage)
 dp.include_router(scenario_handler.router)
 dp.include_router(quiz_router)
 dp.include_router(scenario_cost_router)
+dp.include_router(common_cta_router)
 
 
 @dp.message(CommandStart())

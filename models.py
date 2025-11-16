@@ -78,3 +78,41 @@ class QuizResult(Base):
     def __repr__(self):
         return (f"<QuizResult(user_id={self.user_id}, quiz_id={self.quiz_id}, "
                 f"dominant={self.dominant_scenario})>")
+
+
+class ScenarioCostResult(Base):
+    __tablename__ = 'scenario_cost_results'
+
+    id = Column(Integer, primary_key=True)
+
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    quiz_id = Column(Integer, ForeignKey('quizzes.id'), nullable=False)
+
+    # снимок статуса — записываем только для психологов
+    is_psychologist_snapshot = Column(Boolean, default=True, nullable=False)
+
+    # сценарий из первого квиза (IMPOSTOR / ETERNAL_STUDENT / SEEKER)
+    scenario = Column(Enum(QuizScenario), nullable=True)
+
+    # Ответы пользователя
+    expected_income = Column(Integer, nullable=False)  # желаемый доход / мес
+    current_income = Column(Integer, nullable=False)   # текущий доход / мес
+    months_delay = Column(Integer, nullable=False)     # сколько месяцев откладывает
+
+    # Расчётные значения
+    lost_per_month = Column(Integer, nullable=False)   # упущено в месяц
+    lost_total = Column(Integer, nullable=False)       # упущено за период (months_delay)
+    lost_3_years = Column(Integer, nullable=False)     # прогноз за 3 года
+
+    created_at = Column(DateTime, default=func.now())
+
+    # связи
+    user = relationship("User", backref="scenario_cost_results")
+    quiz = relationship("Quiz")
+
+    def __repr__(self):
+        return (
+            f"<ScenarioCostResult(user_id={self.user_id}, "
+            f"expected={self.expected_income}, current={self.current_income}, "
+            f"months={self.months_delay}, lost_total={self.lost_total})>"
+        )

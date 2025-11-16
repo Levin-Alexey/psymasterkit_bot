@@ -129,12 +129,20 @@ async def handle_go_to_channel(callback: CallbackQuery):
 
     await callback.message.answer('🎁 А теперь обещанный подарок:', parse_mode='HTML')
 
-    file_path = Path(__file__).resolve().parents[1] / 'src' / 'test.txt'
-    try:
-        document = FSInputFile(str(file_path))
-        await callback.message.answer_document(document)
-    except Exception:
-        # На случай отсутствия файла — мягко уведомим
-        await callback.message.answer('Не удалось приложить файл подарка.')
+    # Путь к файлу относительно корня проекта
+    file_path = Path(__file__).resolve().parent.parent / 'src' / 'test.txt'
+    
+    if file_path.exists():
+        try:
+            document = FSInputFile(str(file_path))
+            await callback.message.answer_document(document)
+        except Exception as e:
+            await callback.message.answer(
+                f'Не удалось приложить файл подарка. Ошибка: {e}'
+            )
+    else:
+        await callback.message.answer(
+            f'Файл подарка не найден по пути: {file_path}'
+        )
 
     await callback.answer()

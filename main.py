@@ -5,7 +5,7 @@ from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.client.session.aiohttp import AiohttpSession
 import socket
-from aiohttp import TCPConnector
+from aiohttp import TCPConnector, ClientTimeout
 from dotenv import load_dotenv
 import os
 from loguru import logger
@@ -29,32 +29,8 @@ load_dotenv()
 # Для продакшена рекомендуется использовать более персистентное хранилище, например Redis
 storage = MemoryStorage()
 
-# Инициализация бота и диспетчера с поддержкой прокси/IPv4 fallback
-proxy_url = os.getenv('PROXY_URL')
-force_ipv4 = os.getenv('FORCE_IPV4', '0') == '1'
-
-connector = None
-if proxy_url:
-    try:
-        from aiohttp_socks import ProxyConnector
-        connector = ProxyConnector.from_url(proxy_url)
-        logger.info("Бот инициализирован с прокси: {}", proxy_url)
-    except Exception as e:
-        logger.error("Не удалось инициализировать прокси {}: {}", proxy_url, e)
-        connector = None
-elif force_ipv4:
-    connector = TCPConnector(family=socket.AF_INET)
-    logger.info("Включен IPv4 fallback (FORCE_IPV4=1)")
-
-if connector:
-    session = AiohttpSession(connector=connector)
-    bot = Bot(token=os.getenv('BOT_TOKEN'), session=session)
-else:
-    # даже без прокси создаём явную сессию (на будущее для таймаутов/настроек)
-    session = AiohttpSession()
-    bot = Bot(token=os.getenv('BOT_TOKEN'), session=session)
-    logger.info("Бот инициализирован без прокси и без FORCE_IPV4")
-
+# Диспетчер можно инициализировать заранее; бота создадим внутри main(),
+# чтобы использовать активный event loop при настройке сетевой сессии
 dp = Dispatcher(storage=storage)
 
 # Включаем роутеры
@@ -163,6 +139,34 @@ async def cmd_delete_user(message: Message):
 async def main():
     """Главная функция запуска бота"""
     await init_db()
+
+    # Инициализируем сессию/бота внутри running loop
+    proxy_url = os.getenv('PROXY_URL')
+    force_ipv4 = os.getenv('FORCE_IPV4', '0') == '1'
+
+    connector = None
+    if proxy_url:
+        try:
+            from aiohttp_socks import ProxyConnector
+            connector = ProxyConnector.from_url(proxy_url)
+            logger.info("Бот инициализирован с прокси: {}", proxy_url)
+        except Exception as e:
+            logger.error("Не удалось инициализировать прокси {}: {}", proxy_url, e)
+            connector = None
+    elif force_ipv4:
+        connector = TCPConnector(family=socket.AF_INET)
+        logger.info("Включен IPv4 fallback (FORCE_IPV4=1)")
+
+    timeout = ClientTimeout(total=180, connect=60)
+    if connector:
+        session = AiohttpSession(connector=connector, timeout=timeout)
+    else:
+        session = AiohttpSession(timeout=timeout)
+        if not force_ipv4:
+            logger.info("Бот инициализирован без прокси и без FORCE_IPV4")
+
+    bot = Bot(token=os.getenv('BOT_TOKEN'), session=session)
+
     logger.info("Бот запущен")
     try:
         await dp.start_polling(bot)

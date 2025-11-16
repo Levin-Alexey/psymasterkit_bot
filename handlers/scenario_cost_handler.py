@@ -87,12 +87,20 @@ async def calculate_scenario_cost(
         lost_total = lost_per_month * months_delay
         lost_3_years = lost_per_month * 36
         
+        # Приводим сценарий к Enum, если в БД хранится строка
+        scenario_field = user.main_quiz_scenario
+        if isinstance(scenario_field, str):
+            try:
+                scenario_field = QuizScenario(scenario_field)
+            except Exception:
+                scenario_field = None
+
         # Создание записи
         cost_result = ScenarioCostResult(
             user_id=user.id,
             quiz_id=quiz.id,
             is_psychologist_snapshot=True,
-            scenario=user.main_quiz_scenario,
+            scenario=scenario_field,
             expected_income=expected_income,
             current_income=current_income,
             months_delay=months_delay,
@@ -129,9 +137,13 @@ async def show_cost_results(callback: CallbackQuery, cost_result: ScenarioCostRe
             return
         
         user_name = user.user_name or "Пользователь"
-        scenario_ru = SCENARIO_RU_NAMES.get(
-            cost_result.scenario, "[не определён]"
-        )
+        scenario_val = cost_result.scenario
+        if isinstance(scenario_val, str):
+            try:
+                scenario_val = QuizScenario(scenario_val)
+            except Exception:
+                scenario_val = None
+        scenario_ru = SCENARIO_RU_NAMES.get(scenario_val, "[не определён]")
         
         # Форматируем числа
         expected = f"{cost_result.expected_income:,}".replace(",", " ")
@@ -208,6 +220,11 @@ async def learn_scenario_cost(callback: CallbackQuery):
     # Ветка для психологов
     if user.is_psychologist:
         scenario = user.main_quiz_scenario
+        if isinstance(scenario, str):
+            try:
+                scenario = QuizScenario(scenario)
+            except Exception:
+                scenario = None
         scenario_ru = SCENARIO_RU_NAMES.get(scenario, "[не определён]")
         user_name = user.user_name or "Пользователь"
 

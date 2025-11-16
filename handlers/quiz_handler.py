@@ -289,9 +289,10 @@ async def show_quiz_results(callback: CallbackQuery, state: FSMContext):
         
         dominant_scenario_key = max(scores, key=scores.get)
         dominant_scenario = QuizScenario[dominant_scenario_key.upper()]
+        dominant_value = dominant_scenario.value  # сохраняем строковое значение для совместимости с БД
         
-        # Сохраняем доминирующий сценарий в базе
-        quiz_result.dominant_scenario = dominant_scenario
+        # Сохраняем доминирующий сценарий в базе (как строку, например 'impostor')
+        quiz_result.dominant_scenario = dominant_value
         quiz_result.is_completed = True
         quiz_result.finished_at = func.now()
         
@@ -301,7 +302,8 @@ async def show_quiz_results(callback: CallbackQuery, state: FSMContext):
         )
         user = user_result.scalar_one_or_none()
         if user:
-            user.main_quiz_scenario = dominant_scenario
+            # Сохраняем строковое значение в профиль пользователя
+            user.main_quiz_scenario = dominant_value
         
         await db.commit()
         

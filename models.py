@@ -34,6 +34,23 @@ class User(Base):
         nullable=True,
     )  # сюда можно писать результат "основного" квиза
 
+    # Связи с каскадным удалением
+    quiz_results = relationship(
+        "QuizResult",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    scenario_cost_results = relationship(
+        "ScenarioCostResult",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    non_psych_quiz_results = relationship(
+        "NonPsychQuizResult",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
     def __repr__(self):
         return f"<User(telegram_id={self.telegram_id}, user_name='{self.user_name}')>"
 
@@ -83,7 +100,7 @@ class QuizResult(Base):
     is_completed = Column(Boolean, default=False)
 
     # связи
-    user = relationship("User", backref="quiz_results")
+    user = relationship("User", back_populates="quiz_results")
     quiz = relationship("Quiz", back_populates="results")
 
     def __repr__(self):
@@ -125,7 +142,7 @@ class ScenarioCostResult(Base):
     created_at = Column(DateTime, default=func.now())
 
     # связи
-    user = relationship("User", backref="scenario_cost_results")
+    user = relationship("User", back_populates="scenario_cost_results")
     quiz = relationship("Quiz")
 
     def __repr__(self):
@@ -192,7 +209,7 @@ class NonPsychQuizResult(Base):
     created_at = Column(DateTime, default=func.now())
 
     # связи
-    user = relationship("User", backref="non_psych_quiz_results")
+    user = relationship("User", back_populates="non_psych_quiz_results")
     quiz = relationship("Quiz")
 
     def __repr__(self):

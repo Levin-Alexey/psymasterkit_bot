@@ -1,6 +1,6 @@
 import asyncio
 from aiogram import Bot, Dispatcher
-from aiogram.filters import CommandStart
+from aiogram.filters import Command, CommandStart
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.storage.memory import MemoryStorage
 from dotenv import load_dotenv
@@ -8,7 +8,7 @@ import os
 from loguru import logger
 from database import init_db, AsyncSessionLocal
 from models import User
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from handlers import scenario_handler
 from handlers.quiz_handler import quiz_router
 from handlers.scenario_cost_handler import scenario_cost_router
@@ -84,6 +84,45 @@ async def cmd_start(message: Message):
     
     await message.answer(start_text, parse_mode="HTML", reply_markup=keyboard)
     logger.info(f"Пользователь {message.from_user.id} запустил бота")
+
+
+@dp.message(Command("del"))
+async def cmd_delete_user(message: Message):
+    """
+    Обработчик команды /del - каскадное удаление пользователя и всех его данных.
+    """
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(
+            select(User).where(User.telegram_id == message.from_user.id)
+        )
+        user = result.scalar_one_or_none()
+
+        if not user:
+            await message.answer(
+                "Вы не найдены в базе данных. Нечего удалять.",
+                parse_mode="HTML"
+            )
+            logger.info(
+                "Команда /del от пользователя {}, но он не найден в БД",
+                message.from_user.id
+            )
+            return
+
+        # Удаляем пользователя (каскадно удалятся все связанные записи)
+        await db.delete(user)
+        await db.commit()
+
+        logger.info(
+            "Пользователь {} ({}) и все его данные удалены из БД",
+            message.from_user.id,
+            message.from_user.username
+        )
+
+        await message.answer(
+            "✅ Все ваши данные успешно удалены из базы данных.\n\n"
+            "Чтобы начать заново, нажмите /start",
+            parse_mode="HTML"
+        )
 
 
 async def main():

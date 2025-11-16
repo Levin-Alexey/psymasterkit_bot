@@ -5,6 +5,7 @@ from aiogram.fsm.state import State, StatesGroup
 from sqlalchemy import select
 from database import AsyncSessionLocal
 from models import User
+from analytics import log_event
 
 # Создаем роутер для этого обработчика
 router = Router()
@@ -52,6 +53,12 @@ async def name_confirmed(callback: CallbackQuery, state: FSMContext):
         if user_record:
             user_record.user_name = user_name
             await db.commit()
+            # Аналитика: подтверждение имени
+            await log_event(
+                user_telegram_id=callback.from_user.id,
+                event_code="name_confirmed",
+                payload={"user_name": user_name}
+            )
             await callback.message.answer(f"Отлично, {user_name}! Ваше имя сохранено.")
         else:
             await callback.message.answer("Произошла ошибка: не удалось найти ваш профиль.")
@@ -98,6 +105,12 @@ async def phone_confirmed(callback: CallbackQuery, state: FSMContext):
         if user_record:
             user_record.phone = phone
             await db.commit()
+            # Аналитика: подтверждение телефона
+            await log_event(
+                user_telegram_id=callback.from_user.id,
+                event_code="phone_confirmed",
+                payload={"phone": phone}
+            )
             await callback.message.answer("Спасибо! Ваш номер телефона сохранен.")
         else:
             await callback.message.answer("Произошла ошибка: не удалось найти ваш профиль.")
@@ -144,6 +157,16 @@ async def goal_selected(callback: CallbackQuery, state: FSMContext):
                 user_record.is_psychologist = False
             
             await db.commit()
+            # Аналитика: выбор цели
+            await log_event(
+                user_telegram_id=callback.from_user.id,
+                event_code="goal_selected",
+                payload={
+                    "goal": goal,
+                    "is_psychologist": bool(user_record.is_psychologist),
+                    "is_not_psychologist": bool(user_record.is_not_psychologist)
+                }
+            )
             await callback.message.answer("Спасибо, ваш выбор сохранен!")
             
             # Отправляем следующее сообщение

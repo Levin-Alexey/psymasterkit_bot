@@ -4,6 +4,7 @@ from sqlalchemy import select
 from loguru import logger
 from database import AsyncSessionLocal
 from models import User, QuizScenario
+from analytics import log_event
 
 consultation_router = Router()
 
@@ -136,6 +137,11 @@ async def handle_book_consultation(callback: CallbackQuery):
 
     await callback.message.answer(text, parse_mode="HTML", reply_markup=keyboard)
     await callback.answer()
+    # Аналитика: пользователь нажал 'Записаться на диагностику'
+    await log_event(
+        user_telegram_id=callback.from_user.id,
+        event_code="book_consultation_clicked",
+    )
 
 
 # Обработчик 'view_participant_results' перенесён в handlers/results_handler.py

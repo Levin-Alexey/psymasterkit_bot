@@ -9,6 +9,7 @@ from sqlalchemy import select
 from database import AsyncSessionLocal
 from models import User
 from pathlib import Path
+from analytics import log_event
 
 supervision_router = Router()
 
@@ -110,6 +111,11 @@ async def handle_book_call(callback: CallbackQuery):
 
     await callback.message.answer(text, parse_mode='HTML', reply_markup=keyboard)
     await callback.answer()
+    # Аналитика: пользователь запросил бронь разговора (шаг 10)
+    await log_event(
+        user_telegram_id=callback.from_user.id,
+        event_code="book_call_requested",
+    )
 
 
 @supervision_router.callback_query(F.data == 'go_to_channel')
@@ -125,6 +131,11 @@ async def handle_go_to_channel(callback: CallbackQuery):
     )
     await callback.message.answer(
         'Откройте канал по кнопке ниже:', reply_markup=url_keyboard
+    )
+    # Аналитика: переход в канал (шаг 11)
+    await log_event(
+        user_telegram_id=callback.from_user.id,
+        event_code="go_to_channel_clicked",
     )
 
     await callback.message.answer('🎁 А теперь обещанный подарок:', parse_mode='HTML')
@@ -142,15 +153,30 @@ async def handle_go_to_channel(callback: CallbackQuery):
             document = FSInputFile(str(file_path))
             await callback.message.answer_document(document)
             logger.info("Файл успешно отправлен пользователю {}", callback.from_user.id)
+            await log_event(
+                user_telegram_id=callback.from_user.id,
+                event_code="gift_sent_success",
+                payload={"path": str(file_path)}
+            )
         except Exception as e:
             logger.error("Ошибка отправки файла: {}", e)
             await callback.message.answer(
                 f'Не удалось приложить файл подарка. Ошибка: {e}'
             )
+            await log_event(
+                user_telegram_id=callback.from_user.id,
+                event_code="gift_sent_failed",
+                payload={"path": str(file_path), "error": str(e)}
+            )
     else:
         logger.error("Файл не найден: {}", file_path)
         await callback.message.answer(
             f'Файл подарка не найден по пути: {file_path}'
+        )
+        await log_event(
+            user_telegram_id=callback.from_user.id,
+            event_code="gift_file_missing",
+            payload={"path": str(file_path)}
         )
 
     await callback.answer()

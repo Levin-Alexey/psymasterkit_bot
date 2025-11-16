@@ -101,3 +101,51 @@ async def handle_ready_for_next_step(callback: CallbackQuery):
 
     await callback.message.answer(text, parse_mode="HTML", reply_markup=keyboard)
     await callback.answer()
+
+
+@consultation_router.callback_query(F.data == "book_consultation")
+async def handle_book_consultation(callback: CallbackQuery):
+    """
+    Обработчик кнопки 'Записаться на диагностику'. Показывает блок про сомнения
+    и кнопку для просмотра результатов участников.
+    """
+    text = (
+        "Сомневаетесь, стоит ли записываться на диагностику?</b>\n\n"
+        "Это абсолютно естественно. Когда на кону серьёзные изменения в жизни, "
+        "здоровый скептицизм — это не слабость, а мудрость.\n\n"
+        "Возможно, вы думаете: \"А вдруг это очередные пустые обещания? А вдруг я "
+        "потрачу время впустую? А вдруг у меня особый случай, и ничего не поможет?\"\n\n"
+        "Мы понимаем эти сомнения, более того — мы их разделяем.\n"
+        "Именно поэтому не просим верить красивым словам.\n\n"
+        "<b>Вместо этого предлагаем увидеть реальные истории участников \"Супервизии\" — "
+        "с их настоящими проблемами, сомнениями и конкретными результатами после программы.</b>\n\n"
+        "Посмотрите, как люди с точно такими же блоками и страхами находили выход. "
+        "Это поможет понять: действительно ли эта программа может сработать именно для вас."
+    )
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Посмотреть результаты участников",
+                    callback_data="view_participant_results"
+                )
+            ]
+        ]
+    )
+
+    await callback.message.answer(text, parse_mode="HTML", reply_markup=keyboard)
+    await callback.answer()
+
+
+@consultation_router.callback_query(F.data == "view_participant_results")
+async def handle_view_participant_results(callback: CallbackQuery):
+    """
+    Временная заглушка для показа результатов участников.
+    """
+    text = (
+        "Скоро здесь появятся реальные истории участников \"Супервизии\" "
+        "с их изначальными сомнениями и достигнутыми результатами."
+    )
+    await callback.message.answer(text, parse_mode="HTML")
+    await callback.answer()

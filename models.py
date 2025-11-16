@@ -26,8 +26,12 @@ class User(Base):
 
     # --- признак пользователя по главному квизу ---
     main_quiz_scenario = Column(
-        Enum(QuizScenario),
-        nullable=True
+        Enum(
+            QuizScenario,
+            name="quizscenario",
+            values_callable=lambda obj: [e.value for e in obj],
+        ),
+        nullable=True,
     )  # сюда можно писать результат "основного" квиза
 
     def __repr__(self):
@@ -64,7 +68,14 @@ class QuizResult(Base):
     seeker_score = Column(Integer, default=0)            # Искатель своего
 
     # Итоговый сценарий по этому квизу
-    dominant_scenario = Column(Enum(QuizScenario), nullable=True)
+    dominant_scenario = Column(
+        Enum(
+            QuizScenario,
+            name="quizscenario",
+            values_callable=lambda obj: [e.value for e in obj],
+        ),
+        nullable=True,
+    )
 
     # Статусы и тайминги
     started_at = Column(DateTime, default=func.now())
@@ -92,7 +103,14 @@ class ScenarioCostResult(Base):
     is_psychologist_snapshot = Column(Boolean, default=True, nullable=False)
 
     # сценарий из первого квиза (IMPOSTOR / ETERNAL_STUDENT / SEEKER)
-    scenario = Column(Enum(QuizScenario), nullable=True)
+    scenario = Column(
+        Enum(
+            QuizScenario,
+            name="quizscenario",
+            values_callable=lambda obj: [e.value for e in obj],
+        ),
+        nullable=True,
+    )
 
     # Ответы пользователя
     expected_income = Column(Integer, nullable=False)  # желаемый доход / мес

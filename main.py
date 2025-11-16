@@ -4,7 +4,8 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.client.session.aiohttp import AiohttpSession
-from aiohttp import ClientTimeout
+from aiogram.client.telegram import TelegramAPIServer
+from aiogram.exceptions import TelegramNetworkError
 from dotenv import load_dotenv
 import os
 from loguru import logger
@@ -142,25 +143,44 @@ async def main():
     # Инициализируем сессию/бота внутри running loop
     proxy_url = os.getenv('PROXY_URL')
     force_ipv4 = os.getenv('FORCE_IPV4', '0') == '1'
+    api_base = os.getenv('TELEGRAM_API_BASE_URL')
 
-    timeout = ClientTimeout(total=180, connect=60)
+    # В aiogram 3 session.timeout ожидается числом (секунды),
+    # поэтому передаём именно float/int, а не aiohttp.ClientTimeout
+    timeout_seconds = float(os.getenv('HTTP_TIMEOUT', '180'))
 
     # Используем прокси, если задано. Для текущей версии aiogram передаём proxy в сессию.
     if proxy_url:
         try:
-            session = AiohttpSession(proxy=proxy_url, timeout=timeout)
+            session = AiohttpSession(proxy=proxy_url, timeout=timeout_seconds)
             logger.info("Бот инициализирован с прокси: {}", proxy_url)
         except Exception as e:
             logger.error("Не удалось инициализировать прокси {}: {}", proxy_url, e)
-            session = AiohttpSession(timeout=timeout)
+            session = AiohttpSession(timeout=timeout_seconds)
     else:
-        session = AiohttpSession(timeout=timeout)
+        session = AiohttpSession(timeout=timeout_seconds)
         if force_ipv4:
             logger.warning("FORCE_IPV4=1 указан, но коннектор IPv4 недоступен в текущей конфигурации; продолжаем без него")
         else:
             logger.info("Бот инициализирован без прокси")
+    api = TelegramAPIServer.from_base(api_base) if api_base else None
+    bot = Bot(token=os.getenv('BOT_TOKEN'), session=session, api=api) if api else Bot(token=os.getenv('BOT_TOKEN'), session=session)
 
-    bot = Bot(token=os.getenv('BOT_TOKEN'), session=session)
+    # Быстрая проверка соединения; при недоступности прокси пробуем без него
+    if proxy_url:
+        try:
+            await bot.get_me()
+        except (TelegramNetworkError, Exception) as e:
+            err_text = str(e)
+            if "Couldn't connect to proxy" in err_text or "ProxyConnectionError" in err_text or "Connect call failed" in err_text:
+                logger.warning("Прокси недоступен ({}). Переключаемся на прямое соединение.", err_text)
+                await bot.session.close()
+                session = AiohttpSession(timeout=timeout_seconds)
+                bot = Bot(token=os.getenv('BOT_TOKEN'), session=session, api=api) if api else Bot(token=os.getenv('BOT_TOKEN'), session=session)
+                logger.info("Бот инициализирован без прокси (fallback)")
+            else:
+                # Если ошибка иная — пробрасываем дальше
+                raise
 
     logger.info("Бот запущен")
     try:

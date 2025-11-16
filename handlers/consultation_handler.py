@@ -110,7 +110,7 @@ async def handle_book_consultation(callback: CallbackQuery):
     и кнопку для просмотра результатов участников.
     """
     text = (
-        "Сомневаетесь, стоит ли записываться на диагностику?</b>\n\n"
+        "<b>Сомневаетесь, стоит ли записываться на диагностику?</b>\n\n"
         "Это абсолютно естественно. Когда на кону серьёзные изменения в жизни, "
         "здоровый скептицизм — это не слабость, а мудрость.\n\n"
         "Возможно, вы думаете: \"А вдруг это очередные пустые обещания? А вдруг я "
@@ -138,14 +138,4 @@ async def handle_book_consultation(callback: CallbackQuery):
     await callback.answer()
 
 
-@consultation_router.callback_query(F.data == "view_participant_results")
-async def handle_view_participant_results(callback: CallbackQuery):
-    """
-    Временная заглушка для показа результатов участников.
-    """
-    text = (
-        "Скоро здесь появятся реальные истории участников \"Супервизии\" "
-        "с их изначальными сомнениями и достигнутыми результатами."
-    )
-    await callback.message.answer(text, parse_mode="HTML")
-    await callback.answer()
+# Обработчик 'view_participant_results' перенесён в handlers/results_handler.py

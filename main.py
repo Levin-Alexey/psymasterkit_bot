@@ -13,6 +13,8 @@ from handlers import scenario_handler
 from handlers.quiz_handler import quiz_router
 from handlers.scenario_cost_handler import scenario_cost_router
 from handlers.common_cta_handler import common_cta_router
+from handlers.results_handler import results_router
+from handlers.supervision_handler import supervision_router
 from handlers.consultation_handler import consultation_router
 
 # Загрузка переменных окружения
@@ -31,6 +33,8 @@ dp.include_router(scenario_handler.router)
 dp.include_router(quiz_router)
 dp.include_router(scenario_cost_router)
 dp.include_router(common_cta_router)
+dp.include_router(results_router)
+dp.include_router(supervision_router)
 dp.include_router(consultation_router)
 
 

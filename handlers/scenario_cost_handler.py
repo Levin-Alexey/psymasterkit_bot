@@ -11,6 +11,7 @@ from loguru import logger
 from sqlalchemy import select
 from database import AsyncSessionLocal
 from models import User, QuizScenario, ScenarioCostResult, Quiz
+from analytics import log_event
 
 # Создаем роутер для обработчика цены сценария
 scenario_cost_router = Router()
@@ -305,6 +306,12 @@ async def calc_scenario_cost(callback: CallbackQuery, state: FSMContext):
     )
     await state.set_state(CostQuizStates.waiting_income_expected)
     await callback.answer()
+    # Событие: старт расчёта стоимости сценария (психолог)
+    await log_event(
+        user_telegram_id=callback.from_user.id,
+        event_code="scenario_cost_started",
+        quiz_code="main_psych_quiz",
+    )
 
 
 @scenario_cost_router.callback_query(
@@ -466,3 +473,14 @@ async def question_3_answered(callback: CallbackQuery, state: FSMContext):
     await show_cost_results(callback, cost_result)
     await state.clear()
     await callback.answer()
+    # Событие: завершение расчёта стоимости сценария (психолог)
+    await log_event(
+        user_telegram_id=callback.from_user.id,
+        event_code="scenario_cost_completed",
+        payload={
+            "lost_per_month": cost_result.lost_per_month,
+            "lost_total": cost_result.lost_total,
+            "lost_3_years": cost_result.lost_3_years,
+        },
+        quiz_code="main_psych_quiz",
+    )

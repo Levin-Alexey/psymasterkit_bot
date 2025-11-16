@@ -7,6 +7,7 @@ from sqlalchemy.sql import func
 from database import AsyncSessionLocal
 from models import User, Quiz, QuizResult, QuizScenario
 from loguru import logger
+from analytics import log_event
 
 # Создаем роутер для квиза
 quiz_router = Router()
@@ -60,6 +61,13 @@ async def start_quiz(callback: CallbackQuery, state: FSMContext):
         await state.update_data(quiz_result_id=new_quiz_result.id)
         
         logger.info(f"Квиз начат пользователем {user.telegram_id}, quiz_result_id={new_quiz_result.id}")
+        # Логируем начало квиза
+        await log_event(
+            user_telegram_id=callback.from_user.id,
+            event_code="quiz_started",
+            payload={"quiz_result_id": new_quiz_result.id},
+            quiz_code="main_psych_quiz",
+        )
     
     # Отправляем первый вопрос
     question_text = "<b>Когда вы думаете о том, чтобы двигаться глубже в психологию…</b>"
@@ -308,6 +316,16 @@ async def show_quiz_results(callback: CallbackQuery, state: FSMContext):
         await db.commit()
         
         logger.info(f"Quiz {quiz_result_id} completed. Dominant scenario: {dominant_scenario_key}")
+        # Логируем завершение квиза
+        await log_event(
+            user_telegram_id=callback.from_user.id,
+            event_code="quiz_completed",
+            payload={
+                "quiz_result_id": quiz_result_id,
+                "dominant_scenario": dominant_value,
+            },
+            quiz_code="main_psych_quiz",
+        )
         
         # Формируем сообщение в зависимости от сценария
         if dominant_scenario == QuizScenario.IMPOSTOR:

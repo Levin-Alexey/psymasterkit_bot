@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import os
 from loguru import logger
 from database import init_db, AsyncSessionLocal
+from analytics import log_event
 from models import User
 from sqlalchemy import select, delete
 from handlers import scenario_handler
@@ -84,6 +85,8 @@ async def cmd_start(message: Message):
     
     await message.answer(start_text, parse_mode="HTML", reply_markup=keyboard)
     logger.info(f"Пользователь {message.from_user.id} запустил бота")
+    # Логируем событие старта бота
+    await log_event(user_telegram_id=message.from_user.id, event_code="bot_start")
 
 
 @dp.message(Command("del"))

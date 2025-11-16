@@ -6,6 +6,7 @@ from loguru import logger
 from sqlalchemy import select
 from database import AsyncSessionLocal
 from models import User, Quiz, NonPsychQuizResult
+from analytics import log_event
 
 non_psych_cost_router = Router()
 
@@ -69,6 +70,12 @@ async def calc_scenario_cost_non_psych(callback: CallbackQuery, state: FSMContex
     )
     await state.set_state(NonPsychQuizStates.waiting_q1_months)
     await callback.answer()
+    # Событие: старт квиза не-психолога
+    await log_event(
+        user_telegram_id=callback.from_user.id,
+        event_code="non_psych_quiz_started",
+        quiz_code="non_psych_quiz_1",
+    )
 
 
 @non_psych_cost_router.callback_query(
@@ -328,4 +335,15 @@ async def show_non_psych_result(callback: CallbackQuery, state: FSMContext):
 
     await state.clear()
     await callback.answer()
+    # Событие: завершение квиза не-психолога
+    await log_event(
+        user_telegram_id=callback.from_user.id,
+        event_code="non_psych_quiz_completed",
+        payload={
+            "months": months,
+            "coef": coef,
+            "sabotage_forms_total": sabotage_forms_total,
+        },
+        quiz_code="non_psych_quiz_1",
+    )
 

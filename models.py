@@ -1,5 +1,6 @@
 import enum
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, Enum, ForeignKey
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -152,6 +153,31 @@ class ScenarioCostResult(Base):
             f"months={self.months_delay}, lost_total={self.lost_total})>"
         )
 
+
+class UserEvent(Base):
+    __tablename__ = 'user_events'
+
+    id = Column(Integer, primary_key=True)
+
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    quiz_id = Column(Integer, ForeignKey('quizzes.id'), nullable=True)
+
+    # Короткий код события: 'bot_start', 'name_confirmed', 'quiz_started', ...
+    event_code = Column(String, nullable=False)
+
+    # Доп. данные события (произвольные ключи), хранится как JSONB
+    payload = Column(JSONB, nullable=True)
+
+    created_at = Column(DateTime, default=func.now())
+
+    # связи
+    user = relationship("User", backref="events")
+    quiz = relationship("Quiz")
+
+    def __repr__(self):
+        return (
+            f"<UserEvent(user_id={self.user_id}, code={self.event_code}, quiz_id={self.quiz_id})>"
+        )
 
 class NonPsychQuizResult(Base):
     """

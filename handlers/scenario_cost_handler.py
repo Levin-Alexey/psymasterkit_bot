@@ -238,11 +238,32 @@ async def learn_scenario_cost(callback: CallbackQuery):
         await callback.answer()
         return
 
-    # TODO: Ветка для не психологов (user.is_not_psychologist)
-    await callback.message.answer(
-        "Здесь будет информация о том, как ваш сценарий влияет на вашу жизнь "
-        "и почему вы теряете больше, чем кажется."
+    # Ветка для не психологов
+    scenario = user.main_quiz_scenario
+    if isinstance(scenario, str):
+        try:
+            scenario = QuizScenario(scenario)
+        except Exception:
+            scenario = None
+    scenario_ru = SCENARIO_RU_NAMES.get(scenario, "[не определён]")
+    user_name = user.user_name or "Пользователь"
+
+    msg = (
+        f"{user_name}, вы узнали свой блокирующий сценарий: "
+        f"<b>\"{scenario_ru}\"</b>.\n\n"
+        "Возможно, это было неожиданно. Или, наоборот, вы думали: \"Да, это про меня...\"\n\n"
+        "Предлагаю посмотреть глубже: <b>Давайте честно посчитаем, во сколько этот сценарий вам обходится.</b>\n\n"
+        "Не в абстрактных понятиях, а в конкретных месяцах жизни."
     )
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(
+                text="Посчитать реальную цену моего сценария",
+                callback_data="calc_scenario_cost_non_psych"
+            )]
+        ]
+    )
+    await callback.message.answer(msg, parse_mode="HTML", reply_markup=keyboard)
     await callback.answer()
 
 

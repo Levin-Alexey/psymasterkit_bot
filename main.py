@@ -8,7 +8,7 @@ import os
 from loguru import logger
 from database import init_db, AsyncSessionLocal
 from analytics import log_event
-from models import User
+from models import User, UserEvent
 from sqlalchemy import select, delete
 from handlers import scenario_handler
 from handlers.quiz_handler import quiz_router
@@ -111,7 +111,12 @@ async def cmd_delete_user(message: Message):
             )
             return
 
-        # Удаляем пользователя (каскадно удалятся все связанные записи)
+        # Сначала удаляем события пользователя, чтобы не упереться в NOT NULL FK
+        await db.execute(
+            delete(UserEvent).where(UserEvent.user_id == user.id)
+        )
+
+        # Удаляем пользователя (остальное уйдёт каскадно по ORM отношениям)
         await db.delete(user)
         await db.commit()
 

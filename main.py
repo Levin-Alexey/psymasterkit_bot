@@ -4,6 +4,8 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.client.session.aiohttp import AiohttpSession
+import socket
+from aiohttp import TCPConnector
 from dotenv import load_dotenv
 import os
 from loguru import logger
@@ -27,17 +29,31 @@ load_dotenv()
 # Для продакшена рекомендуется использовать более персистентное хранилище, например Redis
 storage = MemoryStorage()
 
-# Инициализация бота и диспетчера с поддержкой прокси
+# Инициализация бота и диспетчера с поддержкой прокси/IPv4 fallback
 proxy_url = os.getenv('PROXY_URL')
+force_ipv4 = os.getenv('FORCE_IPV4', '0') == '1'
+
+connector = None
 if proxy_url:
-    from aiohttp_socks import ProxyConnector
-    connector = ProxyConnector.from_url(proxy_url)
+    try:
+        from aiohttp_socks import ProxyConnector
+        connector = ProxyConnector.from_url(proxy_url)
+        logger.info("Бот инициализирован с прокси: {}", proxy_url)
+    except Exception as e:
+        logger.error("Не удалось инициализировать прокси {}: {}", proxy_url, e)
+        connector = None
+elif force_ipv4:
+    connector = TCPConnector(family=socket.AF_INET)
+    logger.info("Включен IPv4 fallback (FORCE_IPV4=1)")
+
+if connector:
     session = AiohttpSession(connector=connector)
     bot = Bot(token=os.getenv('BOT_TOKEN'), session=session)
-    logger.info(f"Бот инициализирован с прокси: {proxy_url}")
 else:
-    bot = Bot(token=os.getenv('BOT_TOKEN'))
-    logger.info("Бот инициализирован без прокси")
+    # даже без прокси создаём явную сессию (на будущее для таймаутов/настроек)
+    session = AiohttpSession()
+    bot = Bot(token=os.getenv('BOT_TOKEN'), session=session)
+    logger.info("Бот инициализирован без прокси и без FORCE_IPV4")
 
 dp = Dispatcher(storage=storage)
 

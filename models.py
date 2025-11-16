@@ -134,3 +134,71 @@ class ScenarioCostResult(Base):
             f"expected={self.expected_income}, current={self.current_income}, "
             f"months={self.months_delay}, lost_total={self.lost_total})>"
         )
+
+
+class NonPsychQuizResult(Base):
+    """
+    Результаты квиза для НЕ психологов:
+    - сколько времени интересуется психологией
+    - как часто думает "хочу что-то делать, но откладываю"
+    - сколько пунктов саботажа выбрал(а)
+    """
+
+    __tablename__ = 'non_psych_quiz_results'
+
+    id = Column(Integer, primary_key=True)
+
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    quiz_id = Column(Integer, ForeignKey('quizzes.id'), nullable=False)
+
+    # снимок статуса — здесь ожидаем, что user.is_psychologist == False
+    is_psychologist_snapshot = Column(Boolean, default=False, nullable=False)
+
+    # ----- СЫРЫЕ ОТВЕТЫ -----
+
+    # Вопрос 1: сколько времени интересуется психологией (в месяцах)
+    # До 6 месяцев  -> 6
+    # 1 год         -> 12
+    # 2 года        -> 24
+    # Больше 2 лет  -> 36
+    months_in_psychology = Column(Integer, nullable=False)
+
+    # Вопрос 2: как часто возникает мысль «хочу начать, но откладываю»
+    # 1 = раз в месяц или реже
+    # 2 = несколько раз в месяц
+    # 4 = примерно раз в неделю
+    # 8 = почти каждый день
+    frequency_coef = Column(Integer, nullable=False)
+
+    # Вопрос 3: сколько пунктов из списка выбрал(а)
+    sabotage_items_count = Column(Integer, nullable=False)
+
+    # (опционально) коды выбранных пунктов, через запятую:
+    # например: "books,help_people,analysis,stuck,postpone,search_direction"
+    sabotage_items_codes = Column(String, nullable=True)
+
+    # ----- РАСЧЁТНЫЕ ПОЛЯ -----
+
+    # пример для 24 месяцев: ~730 дней
+    days_in_psychology = Column(Integer, nullable=False)
+
+    # сколько раз возвращался(ась) к мысли о действии
+    # пример: 24 месяца * coef=4 => 96 раз
+    thoughts_count = Column(Integer, nullable=False)
+
+    # "накопили {4 + количество выбранных} формы саботажа"
+    sabotage_forms_total = Column(Integer, nullable=False)
+
+    created_at = Column(DateTime, default=func.now())
+
+    # связи
+    user = relationship("User", backref="non_psych_quiz_results")
+    quiz = relationship("Quiz")
+
+    def __repr__(self):
+        return (
+            f"<NonPsychQuizResult(user_id={self.user_id}, "
+            f"months={self.months_in_psychology}, "
+            f"coef={self.frequency_coef}, "
+            f"sabotage_count={self.sabotage_items_count})>"
+        )

@@ -16,6 +16,7 @@ from handlers.common_cta_handler import common_cta_router
 from handlers.results_handler import results_router
 from handlers.supervision_handler import supervision_router
 from handlers.consultation_handler import consultation_router
+from handlers.non_psych_cost_handler import non_psych_cost_router
 
 # Загрузка переменных окружения
 load_dotenv()
@@ -32,6 +33,7 @@ dp = Dispatcher(storage=storage)
 dp.include_router(scenario_handler.router)
 dp.include_router(quiz_router)
 dp.include_router(scenario_cost_router)
+dp.include_router(non_psych_cost_router)
 dp.include_router(common_cta_router)
 dp.include_router(results_router)
 dp.include_router(supervision_router)

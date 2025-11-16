@@ -1,8 +1,14 @@
 from aiogram import Router, F
-from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import (
+    CallbackQuery,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+    FSInputFile,
+)
 from sqlalchemy import select
 from database import AsyncSessionLocal
 from models import User
+from pathlib import Path
 
 supervision_router = Router()
 
@@ -66,4 +72,69 @@ async def handle_learn_more_supervision(callback: CallbackQuery):
         )
 
     await callback.message.answer(text, parse_mode='HTML', reply_markup=keyboard)
+    await callback.answer()
+
+
+@supervision_router.callback_query(F.data == 'book_call')
+async def handle_book_call(callback: CallbackQuery):
+    """
+    После запроса на бронь разговора показываем подтверждение
+    и кнопку перехода в канал.
+    """
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(
+            select(User).where(User.telegram_id == callback.from_user.id)
+        )
+        user = result.scalar_one_or_none()
+
+    display_name = (user.user_name if user and user.user_name else 'Коллега')
+
+    text = (
+        f"✅ Отлично, {display_name}! Заявка отправлена.\n\n"
+        "<b>Специалист свяжется с вами в течение 24 часов для подбора "
+        "удобного времени.</b>\n\n"
+        "А пока — приглашаю вас в отдельный канал «Супервизии» \n\n"
+        "<b>Там вы найдёте:</b>\n"
+        "→ Истории тех, кто уже прошёл путь от сценария к результату\n"
+        "→ Полезные материалы по психологии (которые можно применять уже сейчас)\n"
+        "→ Анонсы открытых эфиров с Дарьей\n"
+        "→ Ответы на частые вопросы о программе"
+    )
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(
+            text='Перейти в канал',
+            callback_data='go_to_channel'
+        )]]
+    )
+
+    await callback.message.answer(text, parse_mode='HTML', reply_markup=keyboard)
+    await callback.answer()
+
+
+@supervision_router.callback_query(F.data == 'go_to_channel')
+async def handle_go_to_channel(callback: CallbackQuery):
+    """
+    Показываем кнопку для перехода в группу и отправляем подарок (файл).
+    """
+    url_keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(
+            text='Перейти в группу',
+            url='https://ya.ru'
+        )]]
+    )
+    await callback.message.answer(
+        'Откройте канал по кнопке ниже:', reply_markup=url_keyboard
+    )
+
+    await callback.message.answer('🎁 А теперь обещанный подарок:', parse_mode='HTML')
+
+    file_path = Path(__file__).resolve().parents[1] / 'src' / 'test.txt'
+    try:
+        document = FSInputFile(str(file_path))
+        await callback.message.answer_document(document)
+    except Exception:
+        # На случай отсутствия файла — мягко уведомим
+        await callback.message.answer('Не удалось приложить файл подарка.')
+
     await callback.answer()

@@ -4,8 +4,7 @@ from aiogram.filters import Command, CommandStart
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.client.session.aiohttp import AiohttpSession
-import socket
-from aiohttp import TCPConnector, ClientTimeout
+from aiohttp import ClientTimeout
 from dotenv import load_dotenv
 import os
 from loguru import logger
@@ -144,26 +143,22 @@ async def main():
     proxy_url = os.getenv('PROXY_URL')
     force_ipv4 = os.getenv('FORCE_IPV4', '0') == '1'
 
-    connector = None
+    timeout = ClientTimeout(total=180, connect=60)
+
+    # Используем прокси, если задано. Для текущей версии aiogram передаём proxy в сессию.
     if proxy_url:
         try:
-            from aiohttp_socks import ProxyConnector
-            connector = ProxyConnector.from_url(proxy_url)
+            session = AiohttpSession(proxy=proxy_url, timeout=timeout)
             logger.info("Бот инициализирован с прокси: {}", proxy_url)
         except Exception as e:
             logger.error("Не удалось инициализировать прокси {}: {}", proxy_url, e)
-            connector = None
-    elif force_ipv4:
-        connector = TCPConnector(family=socket.AF_INET)
-        logger.info("Включен IPv4 fallback (FORCE_IPV4=1)")
-
-    timeout = ClientTimeout(total=180, connect=60)
-    if connector:
-        session = AiohttpSession(connector=connector, timeout=timeout)
+            session = AiohttpSession(timeout=timeout)
     else:
         session = AiohttpSession(timeout=timeout)
-        if not force_ipv4:
-            logger.info("Бот инициализирован без прокси и без FORCE_IPV4")
+        if force_ipv4:
+            logger.warning("FORCE_IPV4=1 указан, но коннектор IPv4 недоступен в текущей конфигурации; продолжаем без него")
+        else:
+            logger.info("Бот инициализирован без прокси")
 
     bot = Bot(token=os.getenv('BOT_TOKEN'), session=session)
 

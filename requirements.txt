@@ -6,6 +6,9 @@ psycopg2-binary>=2.9.9
 # Telegram Bot API (aiogram)
 aiogram>=3.3.0
 
+# Proxy support
+aiohttp-socks>=0.8.4
+
 
 
 # Environment Variables

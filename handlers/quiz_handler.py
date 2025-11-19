@@ -277,6 +277,117 @@ async def question_3_answered(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
+# --- Обработчики ответов на четвёртый вопрос ---
+@quiz_router.callback_query(F.data.startswith("q4_"), QuizStates.question_4)
+async def question_4_answered(callback: CallbackQuery, state: FSMContext):
+    answer = callback.data.replace("q4_", "")
+    
+    # Получаем ID результата квиза из состояния
+    user_data = await state.get_data()
+    quiz_result_id = user_data.get("quiz_result_id")
+    
+    if not quiz_result_id:
+        await callback.message.answer("Ошибка: не удалось найти результат квиза.")
+        await callback.answer()
+        return
+    
+    # Обновляем счетчики в базе данных
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(
+            select(QuizResult).where(QuizResult.id == quiz_result_id)
+        )
+        quiz_result = result.scalar_one_or_none()
+        
+        if quiz_result:
+            if answer == "impostor":
+                quiz_result.impostor_score += 1
+                logger.info(f"Quiz {quiz_result_id}: +1 impostor (total={quiz_result.impostor_score})")
+            elif answer == "seeker":
+                quiz_result.seeker_score += 1
+                logger.info(f"Quiz {quiz_result_id}: +1 seeker (total={quiz_result.seeker_score})")
+            elif answer == "eternal_student":
+                quiz_result.eternal_student_score += 1
+                logger.info(f"Quiz {quiz_result_id}: +1 eternal_student (total={quiz_result.eternal_student_score})")
+            
+            await db.commit()
+        else:
+            await callback.message.answer("Ошибка: не удалось найти результат квиза.")
+            await callback.answer()
+            return
+    
+    # Отправляем пятый вопрос
+    question_text = "<b>Перед важным шагом вы чаще:</b>"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="«Сомневаюсь в своих силах и ищу подтверждения, что справлюсь»",
+            callback_data="q5_impostor"
+        )],
+        [InlineKeyboardButton(
+            text="«Составляю детальный план, чтобы учесть все нюансы и риски»",
+            callback_data="q5_eternal_student"
+        )],
+        [InlineKeyboardButton(
+            text="«Колеблюсь: а точно ли это тот шаг? может, есть вариант получше?»",
+            callback_data="q5_seeker"
+        )]
+    ])
+    
+    await callback.message.answer(question_text, parse_mode="HTML", reply_markup=keyboard)
+    await state.set_state(QuizStates.question_5)
+    await callback.answer()
+
+
+# --- Обработчики ответов на пятый вопрос ---
+@quiz_router.callback_query(F.data.startswith("q5_"), QuizStates.question_5)
+async def question_5_answered(callback: CallbackQuery, state: FSMContext):
+    answer = callback.data.replace("q5_", "")
+    
+    # Получаем ID результата квиза из состояния
+    user_data = await state.get_data()
+    quiz_result_id = user_data.get("quiz_result_id")
+    
+    if not quiz_result_id:
+        await callback.message.answer("Ошибка: не удалось найти результат квиза.")
+        await callback.answer()
+        return
+    
+    # Обновляем счетчики в базе данных
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(
+            select(QuizResult).where(QuizResult.id == quiz_result_id)
+        )
+        quiz_result = result.scalar_one_or_none()
+        
+        if quiz_result:
+            if answer == "impostor":
+                quiz_result.impostor_score += 1
+                logger.info(f"Quiz {quiz_result_id}: +1 impostor (total={quiz_result.impostor_score})")
+            elif answer == "seeker":
+                quiz_result.seeker_score += 1
+                logger.info(f"Quiz {quiz_result_id}: +1 seeker (total={quiz_result.seeker_score})")
+            elif answer == "eternal_student":
+                quiz_result.eternal_student_score += 1
+                logger.info(f"Quiz {quiz_result_id}: +1 eternal_student (total={quiz_result.eternal_student_score})")
+            
+            await db.commit()
+        else:
+            await callback.message.answer("Ошибка: не удалось найти результат квиза.")
+            await callback.answer()
+            return
+    
+    # Показываем кнопку для результатов
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="Узнать результаты сценариев",
+            callback_data="show_quiz_results"
+        )]
+    ])
+    
+    await callback.message.answer("Квиз завершен!", reply_markup=keyboard)
+    await callback.answer()
+
+
 # --- Обработчик показа результатов квиза ---
 @quiz_router.callback_query(F.data == "show_quiz_results")
 async def show_quiz_results(callback: CallbackQuery, state: FSMContext):

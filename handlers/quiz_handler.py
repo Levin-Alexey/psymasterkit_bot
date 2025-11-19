@@ -17,6 +17,8 @@ class QuizStates(StatesGroup):
     question_1 = State()
     question_2 = State()
     question_3 = State()
+    question_4 = State()
+    question_5 = State()
 
 
 # --- Обработчик кнопки "Начать квиз" ---
@@ -252,15 +254,26 @@ async def question_3_answered(callback: CallbackQuery, state: FSMContext):
             await callback.answer()
             return
     
-    # Показываем кнопку для результатов
+    # Отправляем четвёртый вопрос
+    question_text = "<b>Когда у вас что-то получается хорошо, первая мысль:</b>"
+    
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
-            text="Узнать результаты сценариев",
-            callback_data="show_quiz_results"
+            text="«Круто получилось! Но почему-то не чувствую, что это мое. Может, копаю не в ту сторону?»",
+            callback_data="q4_seeker"
+        )],
+        [InlineKeyboardButton(
+            text="«Наверное, просто повезло... Другие бы справились лучше»",
+            callback_data="q4_impostor"
+        )],
+        [InlineKeyboardButton(
+            text="«Хорошо, но я уже вижу несколько моментов, где можно было сделать лучше»",
+            callback_data="q4_eternal_student"
         )]
     ])
     
-    await callback.message.answer("Квиз завершен!", reply_markup=keyboard)
+    await callback.message.answer(question_text, parse_mode="HTML", reply_markup=keyboard)
+    await state.set_state(QuizStates.question_4)
     await callback.answer()
 
 

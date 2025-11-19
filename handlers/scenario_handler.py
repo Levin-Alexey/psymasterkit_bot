@@ -121,9 +121,9 @@ async def phone_confirmed(callback: CallbackQuery, state: FSMContext):
     # Задаем следующий вопрос
     question_text = "Что для вас важнее прямо сейчас?"
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Начать профессиональную карьеру в психологии и получить первый доход", callback_data="goal_career")],
-        [InlineKeyboardButton(text="Улучшить свои навыки и расширить круг клиентов", callback_data="goal_skills")],
-        [InlineKeyboardButton(text="Изучать психологию для личного развития и углубления знаний", callback_data="goal_personal")]
+        [InlineKeyboardButton(text="Начать карьеру и получить первый доход", callback_data="goal_career")],
+        [InlineKeyboardButton(text="Улучшить навыки и расширить круг клиентов", callback_data="goal_skills")],
+        [InlineKeyboardButton(text="Изучать психологию для себя и саморазвития", callback_data="goal_personal")]
     ])
     
     await callback.message.answer(question_text, reply_markup=keyboard)

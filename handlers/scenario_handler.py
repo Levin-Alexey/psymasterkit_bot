@@ -14,7 +14,7 @@ from loguru import logger
 router = Router()
 
 # URL webhook N8N
-N8N_WEBHOOK_URL = "https://superegocomp.app.n8n.cloud/webhook/data"
+N8N_WEBHOOK_URL = "https://superegocomp.app.n8n.cloud/webhook-test/data"
 
 
 # Функция отправки данных в N8N

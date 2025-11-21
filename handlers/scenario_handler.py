@@ -6,9 +6,47 @@ from sqlalchemy import select
 from database import AsyncSessionLocal
 from models import User
 from analytics import log_event
+import aiohttp
+import json
+from loguru import logger
 
 # Создаем роутер для этого обработчика
 router = Router()
+
+# URL webhook N8N
+N8N_WEBHOOK_URL = "https://superegocomp.app.n8n.cloud/webhook/data"
+
+
+# Функция отправки данных в N8N
+async def send_to_n8n(user_name: str, phone: str, user_type: str):
+    """
+    Отправляет данные пользователя в N8N webhook.
+    
+    Args:
+        user_name: Имя пользователя
+        phone: Телефон пользователя
+        user_type: 'psychologist' или 'non_psychologist'
+    """
+    payload = {
+        "user_name": user_name,
+        "phone": phone,
+        "user_type": user_type
+    }
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                N8N_WEBHOOK_URL,
+                json=payload,
+                timeout=aiohttp.ClientTimeout(total=10)
+            ) as response:
+                if response.status == 200:
+                    logger.info(f"N8N webhook успешно отправлен для {user_name} ({user_type})")
+                else:
+                    logger.warning(f"N8N webhook вернул статус {response.status} для {user_name}")
+    except Exception as e:
+        logger.error(f"Ошибка отправки в N8N webhook: {e}")
+
 
 # Определяем состояния FSM
 class ScenarioStates(StatesGroup):
@@ -199,6 +237,24 @@ async def goal_selected(callback: CallbackQuery, state: FSMContext):
 # --- 9. Обработчик кнопки "Узнай свой сценарий" ---
 @router.callback_query(F.data == "discover_scenario")
 async def discover_scenario(callback: CallbackQuery, state: FSMContext):
+    # Получаем данные пользователя из БД для отправки в N8N
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(
+            select(User).where(User.telegram_id == callback.from_user.id)
+        )
+        user = result.scalar_one_or_none()
+        
+        if user and user.user_name and user.phone:
+            # Определяем тип пользователя
+            user_type = "psychologist" if user.is_psychologist else "non_psychologist"
+            
+            # Отправляем данные в N8N
+            await send_to_n8n(
+                user_name=user.user_name,
+                phone=user.phone,
+                user_type=user_type
+            )
+    
     message_text = (
         "✨ <b>Пора заглянуть глубже.</b>\n\n"
         "Ни образование, ни опыт, ни даже харизма не играют ключевой роли, "

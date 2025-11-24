@@ -27,11 +27,12 @@ async def send_to_n8n(user_name: str, phone: str, user_type: str):
         phone: Телефон пользователя
         user_type: 'psychologist' или 'non_psychologist'
     """
-    payload = {
-        "user_name": user_name,
-        "phone": phone,
-        "user_type": user_type
-    }
+        payload = {
+            "user_name": user_name,
+            "phone": phone,
+            "user_type": user_type,
+            "telegram_username": telegram_username
+        }
     
     try:
         async with aiohttp.ClientSession() as session:
@@ -249,11 +250,12 @@ async def discover_scenario(callback: CallbackQuery, state: FSMContext):
             user_type = "psychologist" if user.is_psychologist else "non_psychologist"
             
             # Отправляем данные в N8N
-            await send_to_n8n(
-                user_name=user.user_name,
-                phone=user.phone,
-                user_type=user_type
-            )
+                await send_to_n8n(
+                    user_name=user.user_name,
+                    phone=user.phone,
+                    user_type=user_type,
+                    telegram_username=user.telegram_username
+                )
     
     message_text = (
         "✨ <b>Пора заглянуть глубже.</b>\n\n"

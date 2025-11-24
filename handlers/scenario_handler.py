@@ -27,12 +27,12 @@ async def send_to_n8n(user_name: str, phone: str, user_type: str):
         phone: Телефон пользователя
         user_type: 'psychologist' или 'non_psychologist'
     """
-        payload = {
-            "user_name": user_name,
-            "phone": phone,
-            "user_type": user_type,
-            "telegram_username": telegram_username
-        }
+    payload = {
+        "user_name": user_name,
+        "phone": phone,
+        "user_type": user_type,
+        "telegram_username": telegram_username
+    }
     
     try:
         async with aiohttp.ClientSession() as session:

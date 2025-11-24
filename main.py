@@ -63,6 +63,10 @@ async def cmd_start(message: Message):
             db.add(new_user)
             await db.commit()
             logger.info(f"Новый пользователь {message.from_user.id} ({message.from_user.username}) добавлен в базу данных.")
+                # Сохраняем telegram_username
+                new_user.telegram_username = message.from_user.username
+                db.add(new_user)
+                await db.commit()
         else:
             logger.info(f"Пользователь {message.from_user.id} ({message.from_user.username}) уже существует в базе данных.")
 

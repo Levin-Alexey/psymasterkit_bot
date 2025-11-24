@@ -19,6 +19,7 @@ class User(Base):
 
     id = Column(Integer, primary_key=True)
     telegram_id = Column(Integer, unique=True, nullable=False)
+    telegram_username = Column(String)  # Telegram username
     user_name = Column(String)
     phone = Column(String)
     bot_start_datetime = Column(DateTime, default=func.now())

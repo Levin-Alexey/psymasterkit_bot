@@ -8,6 +8,7 @@ from aiogram.client.telegram import TelegramAPIServer
 from aiogram.exceptions import TelegramNetworkError
 from dotenv import load_dotenv
 import os
+from datetime import datetime
 from loguru import logger
 from database import init_db, AsyncSessionLocal
 from analytics import log_event
@@ -58,15 +59,12 @@ async def cmd_start(message: Message):
             # Создаем нового пользователя
             new_user = User(
                 telegram_id=message.from_user.id,
-                user_name=message.from_user.username
+                telegram_username=message.from_user.username,
+                bot_start_datetime=datetime.utcnow()
             )
             db.add(new_user)
             await db.commit()
             logger.info(f"Новый пользователь {message.from_user.id} ({message.from_user.username}) добавлен в базу данных.")
-                # Сохраняем telegram_username
-                new_user.telegram_username = message.from_user.username
-                db.add(new_user)
-                await db.commit()
         else:
             logger.info(f"Пользователь {message.from_user.id} ({message.from_user.username}) уже существует в базе данных.")
 

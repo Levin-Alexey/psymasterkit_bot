@@ -18,7 +18,7 @@ N8N_WEBHOOK_URL = "https://superegocomp.app.n8n.cloud/webhook-test/data"
 
 
 # Функция отправки данных в N8N
-async def send_to_n8n(user_name: str, phone: str, user_type: str):
+async def send_to_n8n(user_name: str, phone: str, user_type: str, telegram_username: str = None):
     """
     Отправляет данные пользователя в N8N webhook.
     
@@ -26,6 +26,7 @@ async def send_to_n8n(user_name: str, phone: str, user_type: str):
         user_name: Имя пользователя
         phone: Телефон пользователя
         user_type: 'psychologist' или 'non_psychologist'
+        telegram_username: Telegram username пользователя
     """
     payload = {
         "user_name": user_name,
@@ -250,12 +251,12 @@ async def discover_scenario(callback: CallbackQuery, state: FSMContext):
             user_type = "psychologist" if user.is_psychologist else "non_psychologist"
             
             # Отправляем данные в N8N
-                await send_to_n8n(
-                    user_name=user.user_name,
-                    phone=user.phone,
-                    user_type=user_type,
-                    telegram_username=user.telegram_username
-                )
+            await send_to_n8n(
+                user_name=user.user_name,
+                phone=user.phone,
+                user_type=user_type,
+                telegram_username=user.telegram_username
+            )
     
     message_text = (
         "✨ <b>Пора заглянуть глубже.</b>\n\n"

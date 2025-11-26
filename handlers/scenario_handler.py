@@ -210,6 +210,7 @@ async def goal_selected(callback: CallbackQuery, state: FSMContext):
             await callback.message.answer("Спасибо, ваш выбор сохранен!")
             
             # Отправляем следующее сообщение
+            await callback.message.answer_photo(photo="https://iimg.su/i/XzuijO")
             user_name = user_record.user_name or "Друг"
             next_message = (
                 f"Супер, {user_name}!\n\n"
@@ -258,6 +259,8 @@ async def discover_scenario(callback: CallbackQuery, state: FSMContext):
                 telegram_username=user.telegram_username
             )
     
+    await callback.message.answer_photo(photo="https://iimg.su/i/5M3YB1")
+
     message_text = (
         "✨ <b>Пора заглянуть глубже.</b>\n\n"
         "Ни образование, ни опыт, ни даже харизма не играют ключевой роли, "

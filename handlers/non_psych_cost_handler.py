@@ -300,6 +300,7 @@ async def show_non_psych_result(callback: CallbackQuery, state: FSMContext):
     user_name = callback.from_user.first_name or "Друг"
 
     # Формируем сообщение с результатом
+    await callback.message.answer_photo(photo="https://iimg.su/i/RHk9mb")
     result_text = (
         f"<b>{user_name}, вот что получилось:</b>\n\n"
         f"✦ Вы прожили <b>{days_in_psychology} дней</b> в поле психологии — "

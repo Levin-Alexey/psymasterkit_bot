@@ -153,6 +153,7 @@ async def show_cost_results(callback: CallbackQuery, cost_result: ScenarioCostRe
         lost_total = f"{cost_result.lost_total:,}".replace(",", " ")
         lost_3_years = f"{cost_result.lost_3_years:,}".replace(",", " ")
         
+        await callback.message.answer_photo(photo="https://iimg.su/i/KEDC1J")
         result_text = (
             f"📊 {user_name}, смотрите:\n\n"
             f"→ Вы хотите зарабатывать {expected} ₽ в месяц, "
@@ -218,6 +219,7 @@ async def learn_scenario_cost(callback: CallbackQuery):
         scenario_ru = SCENARIO_RU_NAMES.get(scenario, "[не определён]")
         user_name = user.user_name or "Пользователь"
 
+        await callback.message.answer_photo(photo="https://iimg.su/i/dEO7x1")
         msg = (
             f"{user_name}, вы узнали свой блокирующий сценарий: "
             f"<b>\"{scenario_ru}\".</b>\n\n"
@@ -249,6 +251,7 @@ async def learn_scenario_cost(callback: CallbackQuery):
     scenario_ru = SCENARIO_RU_NAMES.get(scenario, "[не определён]")
     user_name = user.user_name or "Пользователь"
 
+    await callback.message.answer_photo(photo="https://iimg.su/i/2VayBn")
     msg = (
         f"{user_name}, вы узнали свой блокирующий сценарий: "
         f"<b>\"{scenario_ru}\"</b>.\n\n"

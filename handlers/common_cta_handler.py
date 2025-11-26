@@ -35,6 +35,7 @@ async def handle_no_more_scenario(callback: CallbackQuery):
     scenario_ru = SCENARIO_RU_NAMES.get(scenario, "ваш сценарий")
 
     if is_psychologist:
+        await callback.message.answer_photo(photo="https://iimg.su/i/vJhw5A")
         text = (
             "<b>Сегодня вечером — важное видео для вас</b> 🎥\n\n"
             "Вы узнаете:\n"
@@ -43,6 +44,7 @@ async def handle_no_more_scenario(callback: CallbackQuery):
             "→ Что делать прямо сейчас, чтобы сдвинуться с мёртвой точки"
         )
     else:
+        await callback.message.answer_photo(photo="https://iimg.su/i/vJhw5A")
         text = (
             "<b>Сегодня вечером — важное видео для вас</b> 🎥\n\n"
             "В нём мы покажем:\n"

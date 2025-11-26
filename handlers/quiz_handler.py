@@ -72,7 +72,7 @@ async def start_quiz(callback: CallbackQuery, state: FSMContext):
         )
     
     # Отправляем первый вопрос
-    question_text = "<b>Когда вы думаете о том, чтобы двигаться глубже в психологию…</b>"
+    question_text = "<b>🧠 Когда вы думаете о том, чтобы двигаться глубже в психологию…</b>"
     
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
@@ -133,7 +133,7 @@ async def question_1_answered(callback: CallbackQuery, state: FSMContext):
             return
     
     # Отправляем второй вопрос
-    question_text = "<b>Если близкий человек критикует вас, ваша реакция:</b>"
+    question_text = "<b>🗣 Если близкий человек критикует вас, ваша реакция:</b>"
     
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
@@ -194,7 +194,7 @@ async def question_2_answered(callback: CallbackQuery, state: FSMContext):
             return
     
     # Отправляем третий вопрос
-    question_text = "<b>Что вас больше всего тормозит?</b>"
+    question_text = "<b>🚧 Что вас больше всего тормозит?</b>"
     
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
@@ -255,7 +255,7 @@ async def question_3_answered(callback: CallbackQuery, state: FSMContext):
             return
     
     # Отправляем четвёртый вопрос
-    question_text = "<b>Когда у вас что-то получается хорошо, первая мысль:</b>"
+    question_text = "<b>✨ Когда у вас что-то получается хорошо, первая мысль:</b>"
     
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
@@ -316,7 +316,7 @@ async def question_4_answered(callback: CallbackQuery, state: FSMContext):
             return
     
     # Отправляем пятый вопрос
-    question_text = "<b>Перед важным шагом вы чаще:</b>"
+    question_text = "<b>🚀 Перед важным шагом вы чаще:</b>"
     
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
@@ -453,6 +453,7 @@ async def show_quiz_results(callback: CallbackQuery, state: FSMContext):
         
         # Формируем сообщение в зависимости от сценария
         if dominant_scenario == QuizScenario.IMPOSTOR:
+            await callback.message.answer_photo(photo="https://iimg.su/i/UaYJno")
             result_text = (
                 "<b>Мы рассчитали ваш преобладающий сценарий.</b>\n"
                 "Внимание — это не ярлык, а точка осознанности.\n\n"
@@ -465,6 +466,7 @@ async def show_quiz_results(callback: CallbackQuery, state: FSMContext):
                 "и почему вы теряете больше, чем кажется.</b>"
             )
         elif dominant_scenario == QuizScenario.ETERNAL_STUDENT:
+            await callback.message.answer_photo(photo="https://iimg.su/i/qAA138")
             result_text = (
                 "<b>Мы рассчитали ваш преобладающий сценарий.</b>\n"
                 "Внимание — это не ярлык, а точка осознанности.\n\n"
@@ -477,6 +479,7 @@ async def show_quiz_results(callback: CallbackQuery, state: FSMContext):
                 "и почему вы теряете больше, чем кажется.</b>"
             )
         else:  # QuizScenario.SEEKER
+            await callback.message.answer_photo(photo="https://iimg.su/i/OttTic")
             result_text = (
                 "<b>Мы рассчитали ваш преобладающий сценарий.\n"
                 "Внимание — это не ярлык, а точка осознанности.</b>\n\n"

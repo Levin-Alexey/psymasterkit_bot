@@ -49,6 +49,8 @@ async def handle_learn_more_supervision(callback: CallbackQuery):
                 )]
             ]
         )
+        await callback.message.answer_photo(photo="https://iimg.su/i/g2zYHi")
+        await callback.message.answer(text, parse_mode='HTML', reply_markup=keyboard)
     else:
         text = (
             '💫 <b>Хотите выйти из "выживания" в полноценную жизнь? Давайте '
@@ -71,8 +73,8 @@ async def handle_learn_more_supervision(callback: CallbackQuery):
                 )]
             ]
         )
+        await callback.message.answer(text, parse_mode='HTML', reply_markup=keyboard)
 
-    await callback.message.answer(text, parse_mode='HTML', reply_markup=keyboard)
     await callback.answer()
 
 

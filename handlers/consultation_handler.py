@@ -136,6 +136,7 @@ async def handle_book_consultation(callback: CallbackQuery):
         ]
     )
 
+    await callback.message.answer_photo(photo="https://iimg.su/i/QAU3sg")
     await callback.message.answer(text, parse_mode="HTML", reply_markup=keyboard)
     await callback.answer()
     # Аналитика: пользователь нажал 'Записаться на диагностику'

@@ -100,6 +100,7 @@ async def handle_ready_for_next_step(callback: CallbackQuery):
         ]
     )
 
+    await callback.message.answer_photo(photo="https://iimg.su/i/qZGxoI")
     await callback.message.answer(text, parse_mode="HTML", reply_markup=keyboard)
     await callback.answer()
 

@@ -143,7 +143,7 @@ async def handle_go_to_channel(callback: CallbackQuery):
     await callback.message.answer('🎁 А теперь обещанный подарок:', parse_mode='HTML')
 
     # Путь к файлу относительно корня проекта
-    file_path = Path(__file__).resolve().parent.parent / 'src' / 'test.txt'
+    file_path = Path(__file__).resolve().parent.parent / 'src' / 'gift.pdf'
     
     # Логируем путь для диагностики
     from loguru import logger

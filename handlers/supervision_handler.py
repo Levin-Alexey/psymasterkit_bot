@@ -128,7 +128,7 @@ async def handle_go_to_channel(callback: CallbackQuery):
     url_keyboard = InlineKeyboardMarkup(
         inline_keyboard=[[InlineKeyboardButton(
             text='Перейти в группу',
-            url='https://ya.ru'
+            url='https://t.me/+9qSFHA_ryi43Y2My'
         )]]
     )
     await callback.message.answer(

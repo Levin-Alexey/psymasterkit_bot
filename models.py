@@ -169,6 +169,9 @@ class UserEvent(Base):
     # Доп. данные события (произвольные ключи), хранится как JSONB
     payload = Column(JSONB, nullable=True)
 
+    # Флаг: отправлено ли напоминание спустя 24 часа после старта (или другого контрольного события)
+    reminder_24h_sent = Column(Boolean, default=False, nullable=False)
+
     created_at = Column(DateTime, default=func.now())
 
     # связи

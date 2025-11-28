@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, InputFile
 from sqlalchemy import select
 from database import AsyncSessionLocal
 from models import User
@@ -18,6 +18,8 @@ async def handle_view_participant_results(callback: CallbackQuery):
     is_psych = bool(user and user.is_psychologist)
 
     if is_psych:
+        await callback.message.answer_photo(photo="https://iimg.su/i/tRGYFX")
+
         text = (
             '⭐️ <b>Дина: от сомнений «не моё ли это?» до 2-х повышений чека '
             'и финансовой независимости</b>\n\n'
@@ -51,6 +53,7 @@ async def handle_view_participant_results(callback: CallbackQuery):
             'уверенность в себе и открывает новый уровень жизни 💚'
         )
     else:
+        await callback.message.answer_photo(photo="https://iimg.su/i/EkZEeT")
         text = (
             '⭐️ <b>Гузель: от «даже у дворника работа интереснее» до '
             'замужества, дома, машины и дохода мужа в 10 раз больше</b>\n\n'

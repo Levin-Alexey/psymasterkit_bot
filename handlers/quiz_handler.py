@@ -80,11 +80,11 @@ async def start_quiz(callback: CallbackQuery, state: FSMContext):
             callback_data="q1_impostor"
         )],
         [InlineKeyboardButton(
-            text="«А вдруг это всё не про меня? А если я снова передумаю?»",
+            text="«А вдруг не про меня? Вдруг снова передумаю?»",
             callback_data="q1_seeker"
         )],
         [InlineKeyboardButton(
-            text="«Пока не уверен(а), хочу сначала всё продумать: позиционирование, упаковка, да и клиентов бы...»",
+            text="«Хочу всё продумать: упаковку, клиентов...»",
             callback_data="q1_eternal_student"
         )]
     ])
@@ -137,15 +137,15 @@ async def question_1_answered(callback: CallbackQuery, state: FSMContext):
     
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
-            text="«Оправдываюсь, спорю — и стараюсь сделать ещё лучше»",
+            text="«Оправдываюсь, спорю и стараюсь лучше»",
             callback_data="q2_eternal_student"
         )],
         [InlineKeyboardButton(
-            text="«Молчу, но надолго выпадаю и начинаю в себе сомневаться...»",
+            text="«Молчу, выпадаю и сомневаюсь в себе»",
             callback_data="q2_seeker"
         )],
         [InlineKeyboardButton(
-            text="«Чувствую укол, будто я и вправду недостаточно хорош(а)»",
+            text="«Чувствую: я недостаточно хорош(а)»",
             callback_data="q2_impostor"
         )]
     ])
@@ -198,15 +198,15 @@ async def question_2_answered(callback: CallbackQuery, state: FSMContext):
     
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
-            text="«Постоянно учусь, читаю, ищу, но не могу конкретно определиться, куда идти и что делать»",
+            text="«Учусь и ищу, но не могу определиться»",
             callback_data="q3_seeker"
         )],
         [InlineKeyboardButton(
-            text="«Сомневаюсь, хватит ли моих знаний, чтобы помочь другим или брать деньги»",
+            text="«Хватит ли знаний помогать и брать деньги?»",
             callback_data="q3_impostor"
         )],
         [InlineKeyboardButton(
-            text="«Хочу всё довести до идеала, прежде чем действовать»",
+            text="«Хочу довести до идеала перед действием»",
             callback_data="q3_eternal_student"
         )]
     ])
@@ -259,15 +259,15 @@ async def question_3_answered(callback: CallbackQuery, state: FSMContext):
     
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
-            text="«Круто получилось! Но почему-то не чувствую, что это мое. Может, копаю не в ту сторону?»",
+            text="«Круто, но не чувствую, что это моё»",
             callback_data="q4_seeker"
         )],
         [InlineKeyboardButton(
-            text="«Наверное, просто повезло... Другие бы справились лучше»",
+            text="«Наверное повезло, другие лучше бы справились»",
             callback_data="q4_impostor"
         )],
         [InlineKeyboardButton(
-            text="«Хорошо, но я уже вижу несколько моментов, где можно было сделать лучше»",
+            text="«Хорошо, но вижу, где можно было лучше»",
             callback_data="q4_eternal_student"
         )]
     ])
@@ -320,15 +320,15 @@ async def question_4_answered(callback: CallbackQuery, state: FSMContext):
     
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
-            text="«Сомневаюсь в своих силах и ищу подтверждения, что справлюсь»",
+            text="«Сомневаюсь и ищу подтверждения, что справлюсь»",
             callback_data="q5_impostor"
         )],
         [InlineKeyboardButton(
-            text="«Составляю детальный план, чтобы учесть все нюансы и риски»",
+            text="«Составляю план, чтобы учесть риски»",
             callback_data="q5_eternal_student"
         )],
         [InlineKeyboardButton(
-            text="«Колеблюсь: а точно ли это тот шаг? может, есть вариант получше?»",
+            text="«Колеблюсь: а точно ли это тот шаг?»",
             callback_data="q5_seeker"
         )]
     ])

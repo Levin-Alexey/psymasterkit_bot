@@ -53,7 +53,7 @@ async def handle_view_participant_results(callback: CallbackQuery):
             'уверенность в себе и открывает новый уровень жизни 💚'
         )
     else:
-        await callback.message.answer_photo(photo="https://iimg.su/i/k76zvn")
+        await callback.message.answer_photo(photo="https://iimg.su/i/jRIJJE")
         text = (
             '⭐️ <b>Гузель: от «даже у дворника работа интереснее» до '
             'замужества, дома, машины и дохода мужа в 10 раз больше</b>\n\n'

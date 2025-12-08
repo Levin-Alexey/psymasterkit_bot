@@ -108,7 +108,7 @@ async def handle_learn_how_to_change(callback: CallbackQuery):
             [
                 InlineKeyboardButton(
                     text="Смотреть видео",
-                    url="https://ya.ru"
+                    url="https://vk.com/wall-90499927_26792"
                 )
             ],
             [
